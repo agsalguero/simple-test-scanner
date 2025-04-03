@@ -103,6 +103,8 @@ The script requires the installation of [Poppler](https://poppler.freedesktop.or
 
 `--thresshold`: Threshold for determining if a question is answered (default: `6`).
 
+`--pb`: Flag to show progress bar during processing.
+
 `--output`: Path to the output folder where processed images and CSV files will be saved.
 
 Example command:
@@ -110,7 +112,7 @@ Example command:
 python scanner.py --input questionnaire.pdf --region 0.1,0.275,0.24,0.965,20 --region 0.335,0.275,0.475,0.965,20 --output output_folder
 ```
 
-### **eval.py**
+## `eval.py`
 
 The script evaluates the answers extracted from the scanned questionnaires against the correct answers for each test variant. It calculates a score for each student based on the number of correct and incorrect answers. The results are saved in a CSV file.
 
@@ -122,9 +124,15 @@ The script evaluates the answers extracted from the scanned questionnaires again
 
 `--wrong`: Penalty for a wrong answer (default: `-0.25`).
 
+`--variants`: Path to a CSV file containing the assigned variant for each student test. If not provided, the script will use the variants found in the input folder sequentially (e.g., 0, 1, 2, 0, 1, 2, ...).
+
+`--show_results`: Flag to display the results in the console.
+
+`--pb`: Flag to show progress bar during processing.
+
 `--output`: Path to the output folder where the results CSV file will be saved.
 
 Example command:
 ```bash
-python eval.py --input answers_folder --correct 1.0 --wrong -0.25 --output results_folder
+python eval.py --input answers_folder --correct 1.0 --wrong -0.25 --variants variants.csv --output results_folder
 ```

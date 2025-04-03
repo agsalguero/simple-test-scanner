@@ -3,28 +3,7 @@ import numpy as np
 import argparse
 import os
 
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
-    """
-    Call in a loop to create terminal progress bar.
-    To enable in Pycharm: edit project configuration -> Execution -> Enable "Emulate terminal in output console"
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
-
+from scanner import printProgressBar
 
     
 if __name__ == '__main__':
@@ -35,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--correct', type=float, default=1.0, help='Correct answer score.')
     parser.add_argument('--wrong', type=float, default=-0.25, help='Wrong answer score.')
     parser.add_argument('--output', type=str, required=True, help='Path to the output CSV file containing the results of all students.')
+    parser.add_argument('--pb', action='store_true', help='Show progress bar.')
     args = parser.parse_args()
 
     # check if the input file exists
@@ -75,8 +55,9 @@ if __name__ == '__main__':
     with open(os.path.join(args.output, 'results.csv'), 'w') as f_results:
         # extract answers from each student's file and compare with the correct answers
         for i, student_answers in students_answers:
-            # print the progress bar
-            printProgressBar(i, len(student_answers), prefix='Processing:', suffix='Complete', length=50)
+            
+            if args.pb:
+                printProgressBar(i, len(student_answers), prefix='Processing:', suffix='Complete', length=50)
 
             # read the student's answers
             with open(student_answers, 'r') as f_student_answers:
@@ -100,4 +81,5 @@ if __name__ == '__main__':
                 f_results.write(','.join(map(str, student_data)))
                 f_results.write(f',{score}\n')        
 
-    printProgressBar(len(student_answers), len(student_answers), prefix='Processing:', suffix='Complete', length=50)
+    if args.pb:
+        printProgressBar(len(student_answers), len(student_answers), prefix='Processing:', suffix='Complete', length=50)

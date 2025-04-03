@@ -334,6 +334,7 @@ if __name__ == '__main__':
     parser.add_argument('--region', type=str, required=True, action='append', help='Region dimensions (%) in the format top_left_x,top_left_y,bottom_right_x,bottom_right_y,rows. Can be repeated for multiple regions.')
     parser.add_argument('--thresshold', type=float, default=6, help='Threshold for the standard deviation of the brightness of the cells.')
     parser.add_argument('--output', type=str, required=True, help='Path to the output folder.')
+    parser.add_argument('--pb', action='store_true', help='Show progress bar.')
     args = parser.parse_args()
 
     # check if the input file exists
@@ -381,8 +382,9 @@ if __name__ == '__main__':
 
     # extract answers from each image
     for i, input_image in enumerate(input_images):
-        # print the progress bar
-        printProgressBar(i, len(input_images), prefix='Processing:', suffix='Complete', length=50)
+        
+        if args.pb:
+            printProgressBar(i, len(input_images), prefix='Processing:', suffix='Complete', length=50)
         
         transformed_img, answers = extract_answers(input_image, regions, transf_img_height=1080, transf_img_width=800, thresshold=args.thresshold)
         if transformed_img is not None:
@@ -403,7 +405,8 @@ if __name__ == '__main__':
         else:
             print('No ArUco markers detected in the image')
 
-    printProgressBar(len(input_images), len(input_images), prefix='Processing:', suffix='Complete', length=50)
+    if args.pb:
+        printProgressBar(len(input_images), len(input_images), prefix='Processing:', suffix='Complete', length=50)
 
     # remove the temporary folder and all its contents
     if args.input.lower().endswith('.pdf'):
