@@ -1,0 +1,32 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: test eval",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "eval.py",
+      "console": "integratedTerminal",
+      "args": "--input examples/output --correct 1 --wrong -0.25 --output examples/output",
+    },
+    {
+      "name": "Python Debugger: test generator",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "test.py",
+      "console": "integratedTerminal",
+      "args": "--input examples/test.tex --variations=3 --show_questions --answers --seed 42 --output examples/output",
+    },
+    {
+      "name": "Python Debugger: test scanner",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "scanner.py",
+      "console": "integratedTerminal",
+      "args": "--i examples/example-scanned.pdf --region 0.100,0.275,0.24,0.965,20 --region 0.335,0.275,0.475,0.965,20 --region 0.57,0.275,0.711,0.965,20 --region 0.805,0.275,0.944,0.965,20 --thresshold 6 --output examples/output",
+    }
+  ]
+}

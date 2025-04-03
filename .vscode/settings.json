@@ -1,0 +1,18 @@
+{
+  "files.exclude": {
+    "**/*.pyc": true,
+    "**/*.aux": true,
+    "**/*.log": true,
+    "**/*.out": true,
+    "**/*.synctex.gz": true,
+    "**/*.toc": true,
+    "**/*.fdb_latexmk": true,
+    "**/*.fls": true,
+    "**/*.nav": true,
+    "**/*.snm": true,
+    "**/*.vrb": true
+  },
+  "files.watcherExclude": {
+    "**/target": true
+  }
+}
