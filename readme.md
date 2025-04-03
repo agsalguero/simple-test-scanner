@@ -72,13 +72,13 @@ LaTeX commands might be used in the questions. For example, the following questi
 
 `--input`: Path to the input LaTeX file containing the test.
 
-`--seed`: Random seed for reproducibility.
+`--seed` (optional): Random seed for reproducibility.
 
-`--variations`: Number of test variations to generate (default: `1`).
+`--variations` (optional): Number of test variations to generate (default: `1`).
 
-`--answers`: Flag to also generate LaTeX files with correct answers for each variation.
+`--answers` (optional): Flag to also generate LaTeX files with correct answers for each variation.
 
-`--show_questions`: Flag to display parsed questions in the console.
+`--show_questions` (optional): Flag to display parsed questions in the console.
 
 `--output`: Path to the output folder where generated files will be saved.
 
@@ -101,9 +101,9 @@ The script requires the installation of [Poppler](https://poppler.freedesktop.or
 
 `--region`: Region dimensions in percentage format `top_left_x,top_left_y,bottom_right_x,bottom_right_y,rows`. Can be repeated for multiple regions.
 
-`--thresshold`: Threshold for determining if a question is answered (default: `6`).
+`--thresshold` (optional): Threshold for determining if a question is answered (default: `6`).
 
-`--pb`: Flag to show progress bar during processing.
+`--pb` (optional): Flag to show progress bar during processing.
 
 `--output`: Path to the output folder where processed images and CSV files will be saved.
 
@@ -120,15 +120,17 @@ The script evaluates the answers extracted from the scanned questionnaires again
 
 `--input`: Path to the folder containing the student answer files and test answer files.
 
-`--correct`: Score for a correct answer (default: `1.0`).
+`--correct` (optional): Score for a correct answer (default: `1.0`).
 
-`--wrong`: Penalty for a wrong answer (default: `-0.25`).
+`--wrong` (optional): Penalty for a wrong answer (default: `-0.25`).
 
-`--variants`: Path to a CSV file containing the assigned variant for each student test. If not provided, the script will use the variants found in the input folder sequentially (e.g., 0, 1, 2, 0, 1, 2, ...).
+`--variants` (optional): Path to a CSV file containing the assigned variant for each student test. If not provided, the script will use the variants found in the input folder sequentially (e.g., 0, 1, 2, 0, 1, 2, ...).
 
-`--show_results`: Flag to display the results in the console.
+`--backrefs` (optional): Path to the CSV file containing the questions backrefs to the original questions for each test variant.
 
-`--pb`: Flag to show progress bar during processing.
+`--show_results` (optional): Flag to display the results in the console.
+
+`--pb` (optional): Flag to show progress bar during processing.
 
 `--output`: Path to the output folder where the results CSV file will be saved.
 

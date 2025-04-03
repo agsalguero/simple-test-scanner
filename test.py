@@ -51,7 +51,7 @@ def parse_questions(file_path, show_questions=False):
     return questions_by_category
 
 def randomize_questions(questions_by_category):
-    randomized_questions = {}
+    backrefs = []
 
     # concat all questions in each category
     all_questions = []
@@ -59,9 +59,17 @@ def randomize_questions(questions_by_category):
         all_questions.extend(questions)
 
     # shuffle all questions
-    random.shuffle(all_questions)
+    shuffled_questions = all_questions.copy()
+    random.shuffle(shuffled_questions)
 
-    return all_questions
+    for i, question in enumerate(shuffled_questions):
+        # store the original order of the questions
+        for j, original_question in enumerate(all_questions):
+            if question[0] == original_question[0]:
+                backrefs.append(j)
+                break
+
+    return shuffled_questions, backrefs
 
 def randomize_options(questions):
     randomized_questions = []
@@ -135,10 +143,14 @@ if __name__ == "__main__":
     total_questions = sum(len(q) for q in questions_by_category.values())
     print(f"Total questions: {total_questions}")
 
+    # keep track of the original questions and their order
+    backrefs = []
+
     # generate specified number of variations
     for i in range(args.variations):
         # randomize the order of the questions
-        randomized_questions = randomize_questions(questions_by_category)
+        randomized_questions, br = randomize_questions(questions_by_category)
+        backrefs.append(br)
 
         # randomize the order of the options and store the correct answer index
         randomized_questions = randomize_options(randomized_questions)
@@ -159,4 +171,9 @@ if __name__ == "__main__":
 
         # store the correct answer index for each question
         generate_answers(f"{output_file_name}_{i}_answers.csv", randomized_questions)
+
+    # store the backrefs for each question in a CSV file
+    with open(os.path.join(args.output, 'backrefs.csv'), 'w') as file:
+        for br in backrefs:
+            file.write(','.join(map(str, br)) + '\n')
     
