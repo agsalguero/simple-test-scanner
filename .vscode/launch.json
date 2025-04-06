@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "test.py",
       "console": "integratedTerminal",
-      "args": "--input examples/test.tex --variations=3 --show_questions --answers --seed 42 --output examples/output",
+      "args": "--input examples/test.tex --variations=10 --show_questions --answers --seed 42 --output examples/output",
     },
     {
       "name": "Python Debugger: test scanner",
@@ -26,7 +26,7 @@
       "request": "launch",
       "program": "eval.py",
       "console": "integratedTerminal",
-      "args": "--input examples/output --correct 1 --wrong -0.25 --variants examples/output/variants.csv --output examples/output",
+      "args": "--input examples/output --correct 1 --wrong -0.5 --variants examples/output/variants.csv --separator ';' --decimal ',' --output examples/output",
     }
   ]
 }

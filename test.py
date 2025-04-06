@@ -71,11 +71,11 @@ def randomize_questions(questions_by_category):
 
     return shuffled_questions, backrefs
 
-def randomize_options(questions):
+def randomize_options(questions, original_questions=[], backref=[]):
     randomized_questions = []
 
-    for question, options, cols in questions:
-        correct_answer = options[0]
+    for i, (question, options, cols) in enumerate(questions):
+        correct_answer = original_questions[backref[i]][1][0] if backref else options[0]
         random.shuffle(options)
         randomized_questions.append((question, options, options.index(correct_answer), cols))
 
@@ -141,6 +141,9 @@ if __name__ == "__main__":
     # parse the questions from the input file
     questions_by_category = parse_questions(args.input, show_questions=args.show_questions)
     total_questions = sum(len(q) for q in questions_by_category.values())
+    all_questions = []
+    for category, questions in questions_by_category.items():
+        all_questions.extend([(q[0], q[1].copy(), q[2]) for q in questions])
     print(f"Total questions: {total_questions}")
 
     # keep track of the original questions and their order
@@ -153,7 +156,7 @@ if __name__ == "__main__":
         backrefs.append(br)
 
         # randomize the order of the options and store the correct answer index
-        randomized_questions = randomize_options(randomized_questions)
+        randomized_questions = randomize_options(randomized_questions, original_questions=all_questions, backref=br)
 
         # replace (VARIANT) int the header and footer for the current variant number
         header_variant = header.replace('(VARIANT)', str(i))

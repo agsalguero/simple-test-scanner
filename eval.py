@@ -15,8 +15,10 @@ if __name__ == '__main__':
     parser.add_argument('--wrong', type=float, default=-0.25, help='Wrong answer score.')
     parser.add_argument('--variants', type=str, required=False, help='Path to the CSV file containing the variant for each student.')
     parser.add_argument('--backrefs', type=str, required=False, help='Path to the CSV file containing the questions backrefs to the original questions for each test variant.')
-    parser.add_argument('--output', type=str, required=True, help='Path to the output CSV file containing the results of all students.')
     parser.add_argument('--pb', action='store_true', help='Show progress bar.')
+    parser.add_argument('--decimal', type=str, default='.', help='Decimal separator.')
+    parser.add_argument('--separator', type=str, default=',', help='CSV separator.')
+    parser.add_argument('--output', type=str, required=True, help='Path to the output CSV file containing the results of all students.')    
     args = parser.parse_args()
 
     # check if the input file exists
@@ -104,20 +106,23 @@ if __name__ == '__main__':
                 # compare the student's answers with the correct answers
                 score = 0
                 for j, answer in enumerate(correct_answers[test_variant]):
-                    if answer == '':
+                    if student_data[j] == '':
                         continue
                     elif answer == student_data[j]:
                         score += args.correct
+                        student_data[j] = args.correct
                     else:
                         score += args.wrong
+                        student_data[j] = args.wrong
 
                 if args.backrefs:
                     # reorder the student's answers based on the backrefs
                     student_data = [student_data[b] for b in backrefs[test_variant]]
 
                 # write the answers and the score to the output file
-                f_results.write(','.join(map(str, student_data)))
-                f_results.write(f',{score}\n')        
+                formatted_data = [str(item).replace('.', args.decimal) for item in student_data]
+                f_results.write(args.separator.join(formatted_data))
+                f_results.write(f'{args.separator}{str(score).replace('.', args.decimal)}\n')        
 
     if args.pb:
         printProgressBar(len(student_answers), len(student_answers), prefix='Processing:', suffix='Complete', length=50)
