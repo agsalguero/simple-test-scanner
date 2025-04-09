@@ -6,9 +6,10 @@ This repository contains a set of Python applications designed for generating, s
 
 The script generates randomized variations of a LaTeX test file, including randomized questions and options. Questions are extracted from a LaTeX file, and the script can generate multiple variations of the test with different randomizations. `(VARIANT)` is a placeholder for the number of variation being generated (0-based index).  
 
-The script replicates the LaTeX structure. All content before the occurrence of `% Questions start here` and after `% Questions end here` is preserved in the output files. 
+The script replicates the LaTeX structure. All content before the occurrence of `% Questions start here` and after `% Questions end here` is preserved in the output files.
 
 The format of is questions has to be as follows:
+
 ```latex
   %- web
   \item ¿Ea non consequat velit culpa ut enim sit officia fugiat aliqua? 
@@ -20,7 +21,7 @@ The format of is questions has to be as follows:
   \end{enumerate}
 ```
 
-The category of the question is defined by the first line, which starts with `%-` and contains the category name. The correct answer should always be the first one in the list. Please respect the LaTeX structure and ensure that the questions are formatted correctly, **including the whitespaces and line breaks**. 
+The category of the question is defined by the first line, which starts with `%-` and contains the category name. The correct answer should always be the first one in the list. Please respect the LaTeX structure and ensure that the questions are formatted correctly, **including the whitespaces and line breaks**.
 
 By default, the script generates two columns for the answers. If you want to specify the number of columns, you can do so by adding `_X` to the category name, where `X` is the number of columns. For example, `%- web_3` will generate three columns for the answers.
 
@@ -68,7 +69,7 @@ LaTeX commands might be used in the questions. For example, the following questi
   \end{enumerate}
 ```
 
-### **Command line arguments**
+### Command line arguments for `test.py`
 
 `--input`: Path to the input LaTeX file containing the test.
 
@@ -83,6 +84,7 @@ LaTeX commands might be used in the questions. For example, the following questi
 `--output`: Path to the output folder where generated files will be saved.
 
 Example command:
+
 ```bash
 python test.py --input test.tex --seed 42 --variations 3 --answers --show_questions --output output_folder
 ```
@@ -95,7 +97,7 @@ The script can read an image or PDF file containing a questionnaire and extract 
 
 The script requires the installation of [Poppler](https://poppler.freedesktop.org/), a PDF rendering library, to handle PDF files. In Windows, a precompiled version of Poppler can be downloaded from [this GitHub repository](https://github.com/oschwartz10612/poppler-windows/releases/). The script will automatically detect the Poppler installation path if it is added to the system PATH variable or if Poppler is located in a subfolder of the script's directory. Please note that some LaTeX distributions include Poppler binaries, so the script may work without any additional installation in those cases.
 
-### **Command line arguments**
+### Command line arguments for `scanner.py`
 
 `--input`: Path to the input image or PDF file containing the scanned questionnaire/s.
 
@@ -108,6 +110,7 @@ The script requires the installation of [Poppler](https://poppler.freedesktop.or
 `--output`: Path to the output folder where processed images and CSV files will be saved.
 
 Example command:
+
 ```bash
 python scanner.py --input questionnaire.pdf --region 0.1,0.275,0.24,0.965,20 --region 0.335,0.275,0.475,0.965,20 --output output_folder
 ```
@@ -116,7 +119,7 @@ python scanner.py --input questionnaire.pdf --region 0.1,0.275,0.24,0.965,20 --r
 
 The script evaluates the answers extracted from the scanned questionnaires against the correct answers for each test variant. It calculates a score for each student based on the number of correct and incorrect answers. The results are saved in a CSV file.
 
-### **Command line arguments**
+### Command line arguments for `eval.py`
 
 `--input`: Path to the folder containing the student answer files and test answer files.
 
@@ -135,6 +138,7 @@ The script evaluates the answers extracted from the scanned questionnaires again
 `--output`: Path to the output folder where the results CSV file will be saved.
 
 Example command:
+
 ```bash
 python eval.py --input answers_folder --correct 1.0 --wrong -0.25 --variants variants.csv --output results_folder
 ```
