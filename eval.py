@@ -1,3 +1,4 @@
+# pylint: disable=missing-module-docstring
 import re
 import argparse
 import os
@@ -143,6 +144,7 @@ if __name__ == "__main__":
                 # select the correct test variant for the student
                 test_variant = student_variants[i]
 
+                # pylint: disable=invalid-name
                 # compare the student's answers with the correct answers
                 score = 0
                 for j, answer in enumerate(correct_answers[test_variant]):

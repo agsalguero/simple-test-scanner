@@ -1,3 +1,4 @@
+# pylint: disable=no-member, missing-module-docstring
 import argparse
 import tempfile
 import os
@@ -123,6 +124,7 @@ def corrected_image(image_path, transf_img_width=500, transf_img_height=700):
     # Create ArUco parameters for detection
     aruco_parameters = cv2.aruco.DetectorParameters()
 
+    # pylint: disable=unpacking-non-sequence
     # Detect ArUco markers in the image
     corners, ids, _ = cv2.aruco.detectMarkers(
         image, aruco_dictionary, parameters=aruco_parameters
@@ -243,7 +245,8 @@ def extract_answers(
                 int(bottom_right_corner[1] * transf_img_height),
             )
 
-            # cv2.rectangle(transformed_image, answer_matrix_top_left_corner, answer_matrix_bottom_right_corner, (255, 0, 0), 1)
+            # cv2.rectangle(transformed_image, answer_matrix_top_left_corner,
+            # answer_matrix_bottom_right_corner, (255, 0, 0), 1)
 
             cell_width = (bottom_right_corner[0] - top_left_corner[0]) / cols
             cell_height = (bottom_right_corner[1] - top_left_corner[1]) / rows_in_region
@@ -337,9 +340,12 @@ def extract_answers(
             # brightness_matrix_normalized = np.zeros((rows, cols))
             # for i in range(rows):
             #     for j in range(cols):
-            #         brightness_matrix_normalized[i, j] = (brightness_matrix[i, j] - min_brightness) / (max_brightness - min_brightness)
+            #         brightness_matrix_normalized[i, j] = (brightness_matrix[i, j] -
+            #  min_brightness) / (max_brightness - min_brightness)
 
-            # print the normalized brightness matrix with two decimal places without using scientific notation
+            # print the normalized brightness matrix with two decimal places without
+            # using scientific
+            # notation
             # np.set_printoptions(precision=2, suppress=True)
             # print(brightness_matrix_normalized)
 
@@ -352,19 +358,25 @@ def extract_answers(
                 std_dev = np.std(brightness_matrix[ri])
 
                 # calc max and min of the other cells in the row
-                # max_brightness_others = np.max(np.delete(brightness_matrix[i], darker_cells_per_row[i]))
-                # min_brightness_others = np.min(np.delete(brightness_matrix[i], darker_cells_per_row[i]))
+                # max_brightness_others = np.max(np.delete(brightness_matrix[i],
+                # darker_cells_per_row[i]))
+                # min_brightness_others = np.min(np.delete(brightness_matrix[i],
+                # darker_cells_per_row[i]))
 
-                # check if the difference of the brightness of the darker cell and the other cells is greater than ten percent
+                # check if the difference of the brightness of the darker cell
+                # and the other cells is
+                # greater than ten percent
                 # others_diff = max_brightness_others - min_brightness_others
-                # darker_diff = brightness_matrix[i, darker_cells_per_row[i]] - min_brightness_others
+                # darker_diff = brightness_matrix[i, darker_cells_per_row[i]] -
+                # min_brightness_others
                 # rel_diff = (darker_diff / others_diff)
 
                 # print(brightness_matrix[i], std_dev)
 
                 if (
                     std_dev > thresshold
-                ):  # rel_diff < -1 and std_dev > 0.012 and brightness_matrix[i, int(darker_cells_per_row[i])] < 0.94:
+                ):  # rel_diff < -1 and std_dev > 0.012 and
+                    # brightness_matrix[i, int(darker_cells_per_row[i])] < 0.94:
                     # draw a green rectangle around the darker cell
                     row_y = int(top_left_corner[1] + (ri * cell_height))
                     col_x = int(
@@ -401,7 +413,8 @@ def extract_answers(
             #         #print(strength)
 
             #         # draw the rectangle
-            #         cv2.rectangle(transformed_image, cell_top_left, cell_bottom_right, (0, 255-strength, 0), 2)
+            #         cv2.rectangle(transformed_image, cell_top_left,
+            # cell_bottom_right, (0, 255-strength, 0), 2)
 
             cv2.rectangle(
                 transformed_image, top_left_corner, bottom_right_corner, (255, 0, 0), 1
@@ -458,7 +471,8 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    # top left coordinates of top left marker are (0, 0) and bottom right coordinates of bottom right marker are (1, 1)
+    # top left coordinates of top left marker are (0, 0) and bottom
+    # right coordinates of bottom right marker are (1, 1)
     # regions = [
     #     ((0.100, 0.275), (0.24, 0.965), 20), # top left, bottom right, rows
     #     ((0.335, 0.275), (0.475, 0.965), 20),
