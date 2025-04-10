@@ -4,3 +4,8 @@
 .log
 .synctex.gz
 *.pyc
+examples/output/student_*.jpg
+examples/output/student_*.csv
+!examples/output/student_0.*
+!examples/output/student_1.*
+!examples/output/student_2.*

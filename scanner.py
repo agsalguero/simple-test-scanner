@@ -455,6 +455,15 @@ if __name__ == "__main__":
         "--output", type=str, required=True, help="Path to the output folder."
     )
     parser.add_argument("--pb", action="store_true", help="Show progress bar.")
+
+    parser.add_argument(
+        "--check",
+        type=str,
+        required=False,
+        help="Check the results of the extraction against the known answers in the " \
+        "specified csv file.",
+    )
+
     args = parser.parse_args()
 
     # check if the input file exists
@@ -511,6 +520,31 @@ if __name__ == "__main__":
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
+    # some statistics about the image processing
+    true_selected = 0  # the option selected is correct
+    false_option = 0  # incorrect option selected
+    false_empty = 0  # none option is selected but someone should be
+    false_selected = 0 # some option is selected but should not be
+
+    if args.check:
+        # check if the check file exists
+        if not os.path.exists(args.check):
+            print(f"Check file {args.check} does not exist.")
+            exit(1)
+
+        # read the answers from the csv file
+        with open(args.check, "r", encoding="utf-8") as f_check:
+            true_selected_answers = []
+            for line in f_check.readlines():
+                # read the first line and split by comma
+                true_selected_answers.append(line.strip().split(","))
+
+        # conver empty strings to None
+        for i, answers in enumerate(true_selected_answers):
+            true_selected_answers[i] = [
+                int(a) if a != "" else None for a in answers
+            ]
+
     # extract answers from each image
     for i, input_image in enumerate(input_images):
 
@@ -545,6 +579,21 @@ if __name__ == "__main__":
                     for item in sublist
                 ]
                 f.write(",".join(map(str, answers)))
+
+                # update the statistics
+                if args.check:
+                    # check if the answers are correct
+                    for j, answer in enumerate(answers):
+                        answer = answer if answer != "" else None
+                        if answer == true_selected_answers[i][j]:
+                            true_selected += 1
+                        elif answer is None and true_selected_answers[i][j] is not None:
+                            false_empty += 1
+                        elif answer is not None and true_selected_answers[i][j] is None:
+                            false_selected += 1
+                        else:
+                            false_option += 1
+                                                        
         else:
             print("No ArUco markers detected in the image")
 
@@ -556,6 +605,13 @@ if __name__ == "__main__":
             suffix="Complete",
             length=50,
         )
+
+    # print the statistics
+    if args.check:
+        print(f"True detected: {true_selected}")
+        print(f"False option: {false_option}")
+        print(f"False empty: {false_empty}")
+        print(f"False selected: {false_selected}")
 
     # remove the temporary folder and all its contents
     if args.input.lower().endswith(".pdf"):

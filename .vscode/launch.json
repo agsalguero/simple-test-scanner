@@ -18,7 +18,7 @@
       "request": "launch",
       "program": "scanner.py",
       "console": "integratedTerminal",
-      "args": "--i examples/example-scanned.pdf --region 0.100,0.275,0.24,0.965,20 --region 0.335,0.275,0.475,0.965,20 --region 0.57,0.275,0.711,0.965,20 --region 0.805,0.275,0.944,0.965,20 --thresshold 6 --pb --output examples/output",
+      "args": "--i examples/example-scanned.pdf --check examples/example-scanned.csv --region 0.100,0.275,0.24,0.965,20 --region 0.335,0.275,0.475,0.965,20 --region 0.57,0.275,0.711,0.965,20 --region 0.805,0.275,0.944,0.965,20 --thresshold 6 --pb --output examples/output",
     },
     {
       "name": "Python Debugger: test eval",
