@@ -107,6 +107,8 @@ The script requires the installation of [Poppler](https://poppler.freedesktop.or
 
 `--pb` (optional): Flag to show progress bar during processing.
 
+`--check` (optional): Path to a CSV file containing the correct answers for each scanned student test. Testing purposes only.
+
 `--output`: Path to the output folder where processed images and CSV files will be saved.
 
 Example command:
