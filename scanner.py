@@ -598,19 +598,19 @@ if __name__ == "__main__":
                             true_selected += 1
                         elif answer is None and true_selected_answers[i][j] is not None:
                             false_empty += 1
-                            print(
-                                f"False empty: student {i}, question {j}, answer {answer}"
-                            )
+                            # print(
+                            #     f"False empty: student {i}, question {j}, answer {answer}"
+                            # )
                         elif answer is not None and true_selected_answers[i][j] is None:
                             false_selected += 1
-                            print(
-                                f"False selected: student {i}, question {j}, answer {answer}"
-                            )
+                            # print(
+                            #     f"False selected: student {i}, question {j}, answer {answer}"
+                            # )
                         else:
                             false_option += 1
-                            print(
-                                f"False option: student {i}, question {j}, answer {answer}"
-                            )
+                            # print(
+                            #     f"False option: student {i}, question {j}, answer {answer}"
+                            # )
                                                         
         else:
             print("No ArUco markers detected in the image")
