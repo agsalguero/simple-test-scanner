@@ -273,10 +273,10 @@ def extract_answers(
                     # cv2.waitKey(0)
 
                     # draw a circle in the center of the cell
-                    # center_x = int(cell_top_left[0] + cell_width / 2)
-                    # center_y = int(cell_top_left[1] + cell_height / 2)
-                    radius = int(min(cell_width, cell_height) / 4)
-                    # cv2.circle(transformed_image, (center_x, center_y), radius, (0, 255, 0), 1)
+                    center_x = int(cell_top_left[0] + cell_width / 2)
+                    center_y = int(cell_top_left[1] + cell_height / 2)
+                    radius = int(min(cell_width, cell_height) / 2)
+                    cv2.circle(transformed_image, (center_x, center_y), radius, (255, 127, 127), 1)
                     # cv2.imshow('cell image', cell_image)
                     # cv2.waitKey(0)
 
@@ -293,9 +293,9 @@ def extract_answers(
                     # cv2.waitKey(0)
 
                     # binarize the image
-                    _, cell_image = cv2.threshold(
-                        cell_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
-                    )
+                    # _, cell_image = cv2.threshold(
+                    #     cell_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+                    # )
                     # cv2.imshow('cell image', cell_image)
                     # cv2.waitKey(0)
 
@@ -309,20 +309,29 @@ def extract_answers(
 
                     # count the number of of white pixels int circle
                     white_pixels = 0
+                    total_pixels = 0
+                    # distance_attenuation_factor = 0.5
                     for x in range(cell_image.shape[0]):
                         for y in range(cell_image.shape[1]):
                             # check if the pixel is inside the circle
                             if (x - cell_image.shape[0] / 2) ** 2 + (
                                 y - cell_image.shape[1] / 2
                             ) ** 2 <= radius**2:
-                                if cell_image[x, y] >= 127:
-                                    white_pixels += 1
+                                
+                                # calculate the relative distance from the center of the circle
+                                distance = ((x - cell_image.shape[0] / 2) ** 2 + (y - cell_image.shape[1] / 2) ** 2) ** 0.5
+                                r_distance = distance / radius
+
+                                # the further the pixel is from the center, the less it counts                                                               
+                                total_pixels += 1 * (1 - r_distance)
+                                if cell_image[x, y] >= 230:
+                                    white_pixels += 1 * (1 - r_distance)
 
                     # brightness_matrix[i, j] = mean_brightness
                     brightness_matrix[ri, j] = white_pixels
 
                     # draw a horizontal line on top of the cell indicating the brightness percentage
-                    brightness_percentage = 1 - (white_pixels / cell_image.size)
+                    brightness_percentage = 1 - (white_pixels / total_pixels)
                     line_length = int(cell_image.shape[1] * brightness_percentage)
                     cv2.line(
                         transformed_image,
@@ -589,10 +598,19 @@ if __name__ == "__main__":
                             true_selected += 1
                         elif answer is None and true_selected_answers[i][j] is not None:
                             false_empty += 1
+                            print(
+                                f"False empty: student {i}, question {j}, answer {answer}"
+                            )
                         elif answer is not None and true_selected_answers[i][j] is None:
                             false_selected += 1
+                            print(
+                                f"False selected: student {i}, question {j}, answer {answer}"
+                            )
                         else:
                             false_option += 1
+                            print(
+                                f"False option: student {i}, question {j}, answer {answer}"
+                            )
                                                         
         else:
             print("No ArUco markers detected in the image")
