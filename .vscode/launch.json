@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "test.py",
       "console": "integratedTerminal",
-      "args": "--input examples/test.tex --variations=10 --show_questions --answers --seed 42 --output examples/output",
+      "args": "--input examples/test.tex --variations=3 --show_questions --answers --seed 42 --output examples/output",
     },
     {
       "name": "Python Debugger: test scanner",
@@ -18,7 +18,15 @@
       "request": "launch",
       "program": "scanner.py",
       "console": "integratedTerminal",
-      "args": "--i examples/example-scanned.pdf --check examples/example-scanned.csv --region 0.100,0.276,0.239,0.965,20 --region 0.335,0.276,0.475,0.965,20 --region 0.571,0.276,0.711,0.965,20 --region 0.807,0.276,0.946,0.965,20 --thresshold 7 --pb --answers examples/output --correct 1 --wrong -0.33 --variants examples/output/variants.csv --backrefs examples/output/backrefs.csv --separator ';' --decimal ',' --output examples/output",
+      "args": "--input examples/example-scanned.pdf --check examples/example-scanned.csv --region 0.100,0.276,0.239,0.965,20 --region 0.335,0.276,0.475,0.965,20 --region 0.571,0.276,0.711,0.965,20 --region 0.807,0.276,0.946,0.965,20 --thresshold 7 --pb --answers examples/output --correct 1 --wrong -0.33 --variants examples/output/variants.csv --backrefs examples/output/backrefs.csv --separator ',' --decimal '.' --output examples/output",
+    },
+    {
+      "name": "Python Debugger: test scanner (review)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "scanner.py",
+      "console": "integratedTerminal",
+      "args": "--input examples/example-scanned.pdf --students-answers examples/output/answers.csv --check examples/example-scanned.csv --region 0.100,0.276,0.239,0.965,20 --region 0.335,0.276,0.475,0.965,20 --region 0.571,0.276,0.711,0.965,20 --region 0.807,0.276,0.946,0.965,20 --thresshold 7 --pb --answers examples/output --correct 1 --wrong -0.33 --variants examples/output/variants.csv --backrefs examples/output/backrefs.csv --output examples/output",
     }
   ]
 }

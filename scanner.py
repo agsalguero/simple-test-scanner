@@ -225,6 +225,7 @@ def extract_answers(
     transf_img_height=700,
     thresshold=8,
     show_regions=False,
+    known_answers=None,
 ):
     """
     Extract answers from the image using ArUco markers.
@@ -234,6 +235,7 @@ def extract_answers(
     if transformed_image is not None:
         selected_answers = []
 
+        answers_in_previous_regions = 0
         # process each region
         for ri, (top_left_corner, bottom_right_corner, rows_in_region) in enumerate(answer_regions):
 
@@ -365,10 +367,19 @@ def extract_answers(
             # save the indices of the darker cells in each row, None if not dark enough
             darker_cells_per_row = []
             for ri in range(rows_in_region):
-                darker_cells_per_row.append(np.argmin(brightness_matrix[ri]))
+                if known_answers:
+                    answer_index = answers_in_previous_regions + ri
+                    if known_answers[answer_index] is None:
+                        darker_cells_per_row.append(None)
+                        std_dev = 0
+                    else:
+                        darker_cells_per_row.append(known_answers[answer_index])
+                        std_dev = thresshold + 1
+                else:
+                    darker_cells_per_row.append(np.argmin(brightness_matrix[ri]))
 
-                # calc standard deviation of the row
-                std_dev = np.std(brightness_matrix[ri])
+                    # calc standard deviation of the row
+                    std_dev = np.std(brightness_matrix[ri])
 
                 # calc max and min of the other cells in the row
                 # max_brightness_others = np.max(np.delete(brightness_matrix[i],
@@ -397,8 +408,8 @@ def extract_answers(
                     )
 
                     cell_top_left = col_x, row_y
-                    cell_bottom_right = int(col_x + cell_width), int(
-                        row_y + cell_height
+                    cell_bottom_right = int(col_x + cell_width - 1), int(
+                        row_y + cell_height - 1
                     )
 
                     cv2.rectangle(
@@ -436,6 +447,8 @@ def extract_answers(
 
             # append the answers in the regions to the global answers list
             selected_answers.append(darker_cells_per_row)
+
+            answers_in_previous_regions += rows_in_region
 
         return transformed_image, selected_answers
     else:
@@ -484,7 +497,7 @@ def mark_correct_answers(
             row_y = int(top_left_corner[1] + (row * cell_height))
 
             cell_top_left = col_x, row_y
-            cell_bottom_right = int(col_x + cell_width), int(row_y + cell_height)
+            cell_bottom_right = int(col_x + cell_width - 1), int(row_y + cell_height - 1)
 
             cv2.rectangle(
                 image, cell_top_left, cell_bottom_right, (0, 255, 0), 1
@@ -494,14 +507,67 @@ def mark_correct_answers(
     # save the image with the correct answers marked
     cv2.imwrite(image_path, image)
 
-if __name__ == "__main__":
 
+def print_original_questions_number(
+    image_path,
+    answer_regions,
+    original_numbers,
+    transf_img_width=500,
+    transf_img_height=700,
+):
+    """
+    Print the original question number in the image after last answer in the row
+    """
+    # load image
+    image = cv2.imread(image_path)
+
+    next_answer_index = 0
+    # process each region
+    for ri, (top_left_corner, bottom_right_corner, rows_in_region) in enumerate(
+        answer_regions
+    ):
+        # convert percentage to pixel coordinates
+        top_left_corner = (
+            int(top_left_corner[0] * transf_img_width),
+            int(top_left_corner[1] * transf_img_height),
+        )
+        bottom_right_corner = (
+            int(bottom_right_corner[0] * transf_img_width),
+            int(bottom_right_corner[1] * transf_img_height),
+        )
+
+        cell_height = (bottom_right_corner[1] - top_left_corner[1]) / rows_in_region
+
+        answers_in_region = original_numbers[next_answer_index : next_answer_index + rows_in_region]
+        # draw a rectangle around the correct answers
+        for row in range(len(answers_in_region)):
+            col_x = int(
+                bottom_right_corner[0]
+            )
+            row_y = int(top_left_corner[1] + ((row+1) * cell_height))
+
+            cell_top_left = col_x, row_y
+
+            cv2.putText(
+                image, str(answers_in_region[row]), cell_top_left, 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.25, (127, 127, 127), 1, cv2.LINE_AA
+            )
+        next_answer_index += rows_in_region
+
+    # save the image with the correct answers marked
+    cv2.imwrite(image_path, image)
+
+if __name__ == "__main__":
     # parse command line arguments
     parser = argparse.ArgumentParser(
         description="Extract answers from scanned image or pdf."
     )
     parser.add_argument(
         "--input", type=str, required=True, help="Path to the input image or pdf file."
+    )
+    parser.add_argument("--students-answers", 
+        type=str, help="Path to csv file with the answers of the students. " \
+        "If not provided, the answers will be extracted from the images."
     )
     parser.add_argument(
         "--region",
@@ -538,7 +604,8 @@ if __name__ == "__main__":
         "--answers",
         type=str,
         required=True,
-        help="Path to the folder containing the answer files of the test variants (test_i_answers.tex).",
+        help="Path to the folder containing the answer files of the test variants " \
+        "(test_i_answers.tex).",
     )
     parser.add_argument(
         "--variants",
@@ -642,8 +709,26 @@ if __name__ == "__main__":
                 int(a) if a != "" else None for a in answers
             ]
 
-    # extract answers from each image
     students_answers = []
+    if args.students_answers:
+        # check if the students answers file exists
+        if not os.path.exists(args.students_answers):
+            print(f"Students answers file {args.students_answers} does not exist.")
+            exit(1)
+
+        # read the answers from the csv file
+        with open(args.students_answers, "r", encoding="utf-8") as f_students_answers:
+            for line in f_students_answers.readlines():
+                # read the first line and split by comma
+                if len(line.strip()) > 0:
+                    answers_items = line.strip().split(",")
+                    # convert the answers to integers and None
+                    answers = [
+                        int(a) if a != "" else None for a in answers_items
+                    ]
+                    students_answers.append(answers)
+
+    # extract answers from each image
     check_exceeded = False
     for i, input_image in enumerate(input_images):
 
@@ -659,8 +744,12 @@ if __name__ == "__main__":
             transf_img_width=800,
             thresshold=args.thresshold,
             show_regions=args.show_regions,
+            known_answers=students_answers[i] if args.students_answers else None,
         )
-        students_answers.append(answers)
+
+        if not args.students_answers:
+            students_answers.append(answers)
+
         if transformed_img is not None:
             # cv2.imshow('Answers', transformed_img)
             # cv2.waitKey(0)
@@ -685,16 +774,16 @@ if __name__ == "__main__":
                 if args.check:
                     # compare the answers with the true selected answers
                     for j, answer in enumerate(answers):
-                        if j < len(true_selected_answers[i]):
+                        if j < len(true_selected_answers):
                             answer = answer if answer != "" else None
-                            if answer == true_selected_answers[i][j]:
+                            if answer == true_selected_answers[j]:
                                 true_selected += 1
-                            elif answer is None and true_selected_answers[i][j] is not None:
+                            elif answer is None and true_selected_answers[j] is not None:
                                 false_empty += 1
                                 # print(
                                 #     f"False empty: student {i}, question {j}, answer {answer}"
                                 # )
-                            elif answer is not None and true_selected_answers[i][j] is None:
+                            elif answer is not None and true_selected_answers[j] is None:
                                 false_selected += 1
                                 # print(
                                 #     f"False selected: student {i}, question {j}, answer {answer}"
@@ -796,14 +885,33 @@ if __name__ == "__main__":
                 for br in backref:
                     backrefs.append([int(b) for b in br])
 
+            for i, student_answers in enumerate(students_answers):
+                reordered_answers = [q+1 for q in backrefs[student_variants[i]]]
+                print_original_questions_number(
+                    os.path.join(args.output, f"student_{i}.jpg"),
+                    regions,
+                    reordered_answers,
+                    transf_img_height=1080,
+                    transf_img_width=800,
+                )
+
+    if not args.students_answers:
+        # flatten the list of answers
+        students_answers = [
+            item for sublist in students_answers for item in sublist
+        ]
+
+    with open(os.path.join(args.output, "answers.csv"), "w", encoding="utf-8") as f_answers:
+        for i, student_answers in enumerate(students_answers):
+            # write the answers to the output file
+            formatted_data = [
+                str(item).replace(".", args.decimal) if item is not None else "" for item in student_answers
+            ]
+            f_answers.write(args.separator.join(formatted_data) + "\n")
+
     with open(os.path.join(args.output, "results.csv"), "w", encoding="utf-8") as f_results:
         # extract answers from each student's file and compare with the correct answers
         for i, student_answers in enumerate(students_answers):
-            # flatten the list of answers of the student
-            student_answers = [
-                item for sublist in student_answers for item in sublist
-            ]
-
             # select the correct test variant for the student
             test_variant = student_variants[i]
 
@@ -829,9 +937,10 @@ if __name__ == "__main__":
 
             # write the answers and the score to the output file
             formatted_data = [
-                str(item).replace(".", args.decimal) if item != None else "" for item in student_answers
+                str(item).replace(".", args.decimal) if item is not None else "" for item in student_answers
             ]
             f_results.write(args.separator.join(formatted_data))
+            f_results.write(args.separator + str(test_variant))
             f_results.write(
                 f"{args.separator}{str(score).replace('.', args.decimal)}\n"
             )
