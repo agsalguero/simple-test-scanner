@@ -23,7 +23,7 @@ def print_progress_bar(
 ):
     """
     Call in a loop to create terminal progress bar.
-    To enable in Pycharm: edit project configuration -> Execution -> Enable "Emulate terminal 
+    To enable in Pycharm: edit project configuration -> Execution -> Enable "Emulate terminal
     in output console"
     @params:
         iteration   - Required  : current iteration (Int)
@@ -237,7 +237,9 @@ def extract_answers(
 
         answers_in_previous_regions = 0
         # process each region
-        for ri, (top_left_corner, bottom_right_corner, rows_in_region) in enumerate(answer_regions):
+        for ri, (top_left_corner, bottom_right_corner, rows_in_region) in enumerate(
+            answer_regions
+        ):
 
             # convert percentage to pixel coordinates
             top_left_corner = (
@@ -281,7 +283,13 @@ def extract_answers(
                     center_y = int(cell_top_left[1] + cell_height / 2)
                     radius = int(min(cell_width, cell_height) / 2)
                     if show_regions:
-                        cv2.circle(transformed_image, (center_x, center_y), radius, (255, 127, 127), 1)
+                        cv2.circle(
+                            transformed_image,
+                            (center_x, center_y),
+                            radius,
+                            (255, 127, 127),
+                            1,
+                        )
                         # cv2.imshow('cell image', cell_image)
                         # cv2.waitKey(0)
 
@@ -322,12 +330,14 @@ def extract_answers(
                             if (x - cell_image.shape[0] / 2) ** 2 + (
                                 y - cell_image.shape[1] / 2
                             ) ** 2 <= radius**2:
-                                
                                 # calculate the relative distance from the center of the circle
-                                distance = ((x - cell_image.shape[0] / 2) ** 2 + (y - cell_image.shape[1] / 2) ** 2) ** 0.5
+                                distance = (
+                                    (x - cell_image.shape[0] / 2) ** 2
+                                    + (y - cell_image.shape[1] / 2) ** 2
+                                ) ** 0.5
                                 r_distance = distance / radius
 
-                                # the further the pixel is from the center, the less it counts                                                               
+                                # the further the pixel is from the center, the less it counts
                                 total_pixels += 1 * (1 - r_distance)
                                 if cell_image[x, y] >= 230:
                                     white_pixels += 1 * (1 - r_distance)
@@ -335,8 +345,9 @@ def extract_answers(
                     # brightness_matrix[i, j] = mean_brightness
                     brightness_matrix[ri, j] = white_pixels
 
-                    if show_regions:                        
-                        # draw a horizontal line on top of the cell indicating the brightness percentage
+                    if show_regions:
+                        # draw a horizontal line on top of the cell indicating the brightness
+                        # percentage
                         brightness_percentage = 1 - (white_pixels / total_pixels)
                         line_length = int(cell_image.shape[1] * brightness_percentage)
                         cv2.line(
@@ -397,9 +408,7 @@ def extract_answers(
 
                 # print(brightness_matrix[i], std_dev)
 
-                if (
-                    std_dev > thresshold
-                ):  # rel_diff < -1 and std_dev > 0.012 and
+                if std_dev > thresshold:  # rel_diff < -1 and std_dev > 0.012 and
                     # brightness_matrix[i, int(darker_cells_per_row[i])] < 0.94:
                     # draw a green rectangle around the darker cell
                     row_y = int(top_left_corner[1] + (ri * cell_height))
@@ -440,9 +449,13 @@ def extract_answers(
             #         cv2.rectangle(transformed_image, cell_top_left,
             # cell_bottom_right, (0, 255-strength, 0), 2)
 
-            if show_regions:                
+            if show_regions:
                 cv2.rectangle(
-                    transformed_image, top_left_corner, bottom_right_corner, (255, 0, 0), 1
+                    transformed_image,
+                    top_left_corner,
+                    bottom_right_corner,
+                    (255, 0, 0),
+                    1,
                 )
 
             # append the answers in the regions to the global answers list
@@ -453,11 +466,12 @@ def extract_answers(
         return transformed_image, selected_answers
     else:
         return None
-    
+
 
 def mark_correct_answers(
     image_path,
     answer_regions,
+    answers,
     corrects,
     cols=4,
     transf_img_width=500,
@@ -488,7 +502,9 @@ def mark_correct_answers(
         cell_width = (bottom_right_corner[0] - top_left_corner[0]) / cols
         cell_height = (bottom_right_corner[1] - top_left_corner[1]) / rows_in_region
 
-        answers_in_region = corrects[next_answer_index : next_answer_index + rows_in_region]
+        answers_in_region = corrects[
+            next_answer_index : next_answer_index + rows_in_region
+        ]
         # draw a rectangle around the correct answers
         for row in range(len(answers_in_region)):
             col_x = int(
@@ -497,11 +513,16 @@ def mark_correct_answers(
             row_y = int(top_left_corner[1] + (row * cell_height))
 
             cell_top_left = col_x, row_y
-            cell_bottom_right = int(col_x + cell_width - 1), int(row_y + cell_height - 1)
-
-            cv2.rectangle(
-                image, cell_top_left, cell_bottom_right, (0, 255, 0), 1
+            cell_bottom_right = int(col_x + cell_width - 1), int(
+                row_y + cell_height - 1
             )
+
+            color = (0, 255, 0)  # green
+            if answers[next_answer_index + row] is None:
+                # yellow if no answer is selected
+                color = (0, 255, 255)
+
+            cv2.rectangle(image, cell_top_left, cell_bottom_right, color, 1)
         next_answer_index += rows_in_region
 
     # save the image with the correct answers marked
@@ -538,24 +559,32 @@ def print_original_questions_number(
 
         cell_height = (bottom_right_corner[1] - top_left_corner[1]) / rows_in_region
 
-        answers_in_region = original_numbers[next_answer_index : next_answer_index + rows_in_region]
+        answers_in_region = original_numbers[
+            next_answer_index : next_answer_index + rows_in_region
+        ]
+        # pylint: disable=consider-using-enumerate
         # draw a rectangle around the correct answers
         for row in range(len(answers_in_region)):
-            col_x = int(
-                bottom_right_corner[0]
-            )
-            row_y = int(top_left_corner[1] + ((row+1) * cell_height))
+            col_x = int(bottom_right_corner[0])
+            row_y = int(top_left_corner[1] + ((row + 1) * cell_height))
 
             cell_top_left = col_x, row_y
 
             cv2.putText(
-                image, str(answers_in_region[row]), cell_top_left, 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.25, (127, 127, 127), 1, cv2.LINE_AA
+                image,
+                str(answers_in_region[row]),
+                cell_top_left,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.25,
+                (127, 127, 127),
+                1,
+                cv2.LINE_AA,
             )
         next_answer_index += rows_in_region
 
     # save the image with the correct answers marked
     cv2.imwrite(image_path, image)
+
 
 if __name__ == "__main__":
     # parse command line arguments
@@ -565,22 +594,24 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input", type=str, required=True, help="Path to the input image or pdf file."
     )
-    parser.add_argument("--students-answers", 
-        type=str, help="Path to csv file with the answers of the students. " \
-        "If not provided, the answers will be extracted from the images."
+    parser.add_argument(
+        "--students-answers",
+        type=str,
+        help="Path to csv file with the answers of the students. "
+        "If not provided, the answers will be extracted from the images.",
     )
     parser.add_argument(
         "--region",
         type=str,
         required=True,
         action="append",
-        help="Region dimensions (%) in the format top_left_x,top_left_y,bottom_right_x," \
+        help="Region dimensions (%) in the format top_left_x,top_left_y,bottom_right_x,"
         "bottom_right_y,rows. Can be repeated for multiple regions.",
     )
     parser.add_argument(
         "--thresshold",
         type=float,
-        default=6,
+        default=7,
         help="Threshold for the standard deviation of the brightness of the cells.",
     )
     parser.add_argument(
@@ -591,7 +622,7 @@ if __name__ == "__main__":
         "--check",
         type=str,
         required=False,
-        help="Check the results of the extraction against the known answers in the " \
+        help="Check the results of the extraction against the known answers in the "
         "specified csv file.",
     )
     parser.add_argument(
@@ -604,7 +635,7 @@ if __name__ == "__main__":
         "--answers",
         type=str,
         required=True,
-        help="Path to the folder containing the answer files of the test variants " \
+        help="Path to the folder containing the answer files of the test variants "
         "(test_i_answers.tex).",
     )
     parser.add_argument(
@@ -617,7 +648,7 @@ if __name__ == "__main__":
         "--backrefs",
         type=str,
         required=False,
-        help="Path to the CSV file containing the questions backrefs to the " \
+        help="Path to the CSV file containing the questions backrefs to the "
         "original questions for each test variant.",
     )
     parser.add_argument(
@@ -639,7 +670,7 @@ if __name__ == "__main__":
     poppler_path = find_poppler_path()
     if poppler_path is None:
         print(
-            "Poppler not found. Please install Poppler and add it to your PATH or " \
+            "Poppler not found. Please install Poppler and add it to your PATH or "
             "copy it to the current directory."
         )
         exit(1)
@@ -663,7 +694,7 @@ if __name__ == "__main__":
             )
         except ValueError:
             print(
-                f"Invalid region format: {region}. Expected format: top_left_x,top_left_y,"\
+                f"Invalid region format: {region}. Expected format: top_left_x,top_left_y,"
                 "bottom_right_x,bottom_right_y,rows."
             )
             continue
@@ -684,11 +715,12 @@ if __name__ == "__main__":
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
+    # pylint: disable=invalid-name
     # some statistics about the image processing
     true_selected = 0  # the option selected is correct
     false_option = 0  # incorrect option selected
     false_empty = 0  # none option is selected but someone should be
-    false_selected = 0 # some option is selected but should not be
+    false_selected = 0  # some option is selected but should not be
 
     if args.check:
         # check if the check file exists
@@ -705,9 +737,7 @@ if __name__ == "__main__":
 
         # conver empty strings to None
         for i, answers in enumerate(true_selected_answers):
-            true_selected_answers[i] = [
-                int(a) if a != "" else None for a in answers
-            ]
+            true_selected_answers[i] = [int(a) if a != "" else None for a in answers]
 
     students_answers = []
     if args.students_answers:
@@ -723,9 +753,7 @@ if __name__ == "__main__":
                 if len(line.strip()) > 0:
                     answers_items = line.strip().split(",")
                     # convert the answers to integers and None
-                    answers = [
-                        int(a) if a != "" else None for a in answers_items
-                    ]
+                    answers = [int(a) if a != "" else None for a in answers_items]
                     students_answers.append(answers)
 
     # extract answers from each image
@@ -748,7 +776,8 @@ if __name__ == "__main__":
         )
 
         if not args.students_answers:
-            students_answers.append(answers)
+            # flatten the list of answers per region
+            students_answers.append([item for sublist in answers for item in sublist])
 
         if transformed_img is not None:
             # cv2.imshow('Answers', transformed_img)
@@ -762,28 +791,30 @@ if __name__ == "__main__":
             # save the answers to a text file
             output_text_path = os.path.join(args.output, f"student_{i}.csv")
             with open(output_text_path, "w", encoding="utf-8") as f:
-                # flatten the list of answers and remove None values
-                answers = [
-                    item if item is not None else ""
-                    for sublist in answers
-                    for item in sublist
-                ]
-                f.write(",".join(map(str, answers)))
+                f.write(
+                    ",".join(map(str, [a if a is not None else "" for a in answers]))
+                    + "\n"
+                )
 
                 # update the statistics
                 if args.check:
                     # compare the answers with the true selected answers
-                    for j, answer in enumerate(answers):
-                        if j < len(true_selected_answers):
-                            answer = answer if answer != "" else None
-                            if answer == true_selected_answers[j]:
+                    for j, answer in enumerate(students_answers[i]):
+                        if j < len(true_selected_answers[i]):
+                            if answer == true_selected_answers[i][j]:
                                 true_selected += 1
-                            elif answer is None and true_selected_answers[j] is not None:
+                            elif (
+                                answer is None
+                                and true_selected_answers[i][j] is not None
+                            ):
                                 false_empty += 1
                                 # print(
                                 #     f"False empty: student {i}, question {j}, answer {answer}"
                                 # )
-                            elif answer is not None and true_selected_answers[j] is None:
+                            elif (
+                                answer is not None
+                                and true_selected_answers[i][j] is None
+                            ):
                                 false_selected += 1
                                 # print(
                                 #     f"False selected: student {i}, question {j}, answer {answer}"
@@ -795,7 +826,6 @@ if __name__ == "__main__":
                                 # )
                         else:
                             check_exceeded = True
-                                                        
         else:
             print("No ArUco markers detected in the image")
 
@@ -867,6 +897,7 @@ if __name__ == "__main__":
         mark_correct_answers(
             os.path.join(args.output, f"student_{i}.jpg"),
             regions,
+            student_answers,
             correct_answers[student_variants[i]],
             transf_img_height=1080,
             transf_img_width=800,
@@ -886,7 +917,7 @@ if __name__ == "__main__":
                     backrefs.append([int(b) for b in br])
 
             for i, student_answers in enumerate(students_answers):
-                reordered_answers = [q+1 for q in backrefs[student_variants[i]]]
+                reordered_answers = [q + 1 for q in backrefs[student_variants[i]]]
                 print_original_questions_number(
                     os.path.join(args.output, f"student_{i}.jpg"),
                     regions,
@@ -895,21 +926,20 @@ if __name__ == "__main__":
                     transf_img_width=800,
                 )
 
-    if not args.students_answers:
-        # flatten the list of answers
-        students_answers = [
-            item for sublist in students_answers for item in sublist
-        ]
-
-    with open(os.path.join(args.output, "answers.csv"), "w", encoding="utf-8") as f_answers:
+    with open(
+        os.path.join(args.output, "answers.csv"), "w", encoding="utf-8"
+    ) as f_answers:
         for i, student_answers in enumerate(students_answers):
             # write the answers to the output file
             formatted_data = [
-                str(item).replace(".", args.decimal) if item is not None else "" for item in student_answers
+                str(item).replace(".", args.decimal) if item is not None else ""
+                for item in student_answers
             ]
             f_answers.write(args.separator.join(formatted_data) + "\n")
 
-    with open(os.path.join(args.output, "results.csv"), "w", encoding="utf-8") as f_results:
+    with open(
+        os.path.join(args.output, "results.csv"), "w", encoding="utf-8"
+    ) as f_results:
         # extract answers from each student's file and compare with the correct answers
         for i, student_answers in enumerate(students_answers):
             # select the correct test variant for the student
@@ -928,6 +958,8 @@ if __name__ == "__main__":
                     score += args.wrong
                     student_answers[j] = args.wrong
 
+            score = round(score, 2)
+
             if args.backrefs:
                 # reorder the student's answers based on the backrefs
                 # br = backrefs[test_variant]
@@ -937,7 +969,8 @@ if __name__ == "__main__":
 
             # write the answers and the score to the output file
             formatted_data = [
-                str(item).replace(".", args.decimal) if item is not None else "" for item in student_answers
+                str(item).replace(".", args.decimal) if item is not None else ""
+                for item in student_answers
             ]
             f_results.write(args.separator.join(formatted_data))
             f_results.write(args.separator + str(test_variant))

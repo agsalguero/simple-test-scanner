@@ -6,6 +6,10 @@
 *.pyc
 examples/output/student_*.jpg
 examples/output/student_*.csv
+examples/output/*.pdf
+examples/output/*.tex
 !examples/output/student_0.*
 !examples/output/student_1.*
 !examples/output/student_2.*
+!examples/output/student_12.jpg
+!examples/output/test_0_answers.pdf
