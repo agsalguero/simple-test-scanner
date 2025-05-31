@@ -962,10 +962,12 @@ if __name__ == "__main__":
 
             if args.backrefs:
                 # reorder the student's answers based on the backrefs
-                # br = backrefs[test_variant]
-                # reordered_answers = [student_answers[i][b] for b in br]
-                # student_answers[i] = reordered_answers
-                student_answers = [student_answers[b] for b in backrefs[test_variant]]
+                student_original_answers = []
+                for i in range(len(backrefs[test_variant])):
+                    original_question_index = backrefs[test_variant].index(i)
+                    student_original_answers.append(student_answers[original_question_index])
+
+                student_answers = student_original_answers
 
             # write the answers and the score to the output file
             formatted_data = [
