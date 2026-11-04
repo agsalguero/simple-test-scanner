@@ -138,6 +138,79 @@ def make_self_contained(file_path, prefix):
     return content, appendix
 
 
+BLOCK_PATTERN = re.compile(
+    r"\\begin\{([A-Za-z]+\*?)\}.*?\\end\{\1\}"
+    r"|\\lstinputlisting\s*(?:\[[^\]]*\])?\s*\{[^}]*\}",
+    re.DOTALL,
+)
+REF_ONLY_PATTERN = re.compile(r"\\(?:ref|pageref|autoref|nameref|cref|Cref)\{([^}]*)\}")
+REF_RANGE_PATTERN = re.compile(
+    r"\\ref\{([^}]*)\}\s*(?:~?-{1,3}~?|\\textendash\s*|a)\s*\\ref\{([^}]*)\}"
+)
+
+
+def split_appendix(appendix):
+    """Split an appendix into labeled blocks (environments such as ``lstlisting``
+    or ``figure``, or ``\\lstinputlisting`` commands, that define a label).
+
+    Returns (preamble, blocks, trailing): the text before the first labeled block,
+    a list of (labels, text) with the text between blocks attached to the next
+    block, and the text after the last labeled block."""
+    preamble, blocks = None, []
+    last = 0
+    for match in BLOCK_PATTERN.finditer(appendix):
+        labels = [m.group(2) for m in LABEL_PATTERN.finditer(match.group(0))]
+        if not labels:
+            continue
+        text = appendix[last : match.end()]
+        if preamble is None:
+            preamble = appendix[last : match.start()]
+            text = match.group(0)
+        blocks.append((labels, text))
+        last = match.end()
+    if preamble is None:
+        return appendix, [], ""
+    return preamble, blocks, appendix[last:]
+
+
+def referenced_labels(texts, appendices):
+    """Labels referenced in the given texts. A range of references such as
+    ``\\ref{lst:1}-\\ref{lst:6}`` also references the labels of the appendix
+    blocks between both labels."""
+    ordered = [
+        label
+        for appendix in appendices
+        for labels, _ in split_appendix(appendix)[1]
+        for label in labels
+    ]
+    referenced = set()
+    for text in texts:
+        for match in REF_ONLY_PATTERN.finditer(text):
+            referenced.update(label.strip() for label in match.group(1).split(","))
+        for match in REF_RANGE_PATTERN.finditer(text):
+            first, last = match.group(1), match.group(2)
+            if first in ordered and last in ordered:
+                i, j = ordered.index(first), ordered.index(last)
+                referenced.update(ordered[min(i, j) : max(i, j) + 1])
+    return referenced
+
+
+def filter_appendix(appendix, referenced):
+    """Keep only the labeled blocks of the appendix that are referenced. The text
+    before the first block (e.g. an introduction) is kept only if some block is
+    kept. Appendices without labeled blocks are kept as they are.
+
+    Returns (filtered appendix, kept blocks, total blocks)."""
+    preamble, blocks, trailing = split_appendix(appendix)
+    if not blocks:
+        return appendix, 0, 0
+    kept = [text for labels, text in blocks if referenced.intersection(labels)]
+    if not kept:
+        return "", 0, len(blocks)
+    filtered = preamble + "".join(kept) + trailing
+    return filtered.strip(), len(kept), len(blocks)
+
+
 def randomize_questions(flat_questions):
     """Shuffle the questions and return them along with their backrefs (the index
     of each shuffled question in the original, unshuffled list)."""
@@ -311,23 +384,6 @@ if __name__ == "__main__":
         working_questions.extend(file_questions)
         all_questions.extend([(q[0], q[1].copy(), q[2]) for q in file_questions])
 
-    # when merging several files, the footer is the end of the questions list of
-    # the template followed by the appendices (e.g. code listings) of the template
-    # (if it is not an input file) and of every input file
-    if merge:
-        closing, _, template_appendix = footer.partition("\\end{enumerate}")
-        template_appendix = template_appendix.replace("\\end{document}", "").strip()
-        if template_appendix and os.path.abspath(template) not in [
-            os.path.abspath(f) for f in args.input
-        ]:
-            appendices.insert(0, template_appendix)
-        footer = (
-            closing
-            + "\\end{enumerate}\n\n"
-            + "\n\n".join(appendices)
-            + "\n\n\\end{document}\n"
-        )
-
     # warn about repeated questions (e.g. the same question in two partial exams)
     seen = set()
     for question, _, _ in all_questions:
@@ -354,6 +410,36 @@ if __name__ == "__main__":
             if args.show_questions:
                 for question, _, _ in all_questions:
                     print(f"  {question[:50]}")
+
+    # when merging several files, the footer is the end of the questions list of
+    # the template followed by the appendix of the template (if it is not an input
+    # file) and the blocks (e.g. code listings) of the appendices of the input
+    # files that are referenced by the selected questions
+    if merge:
+        closing, _, template_appendix = footer.partition("\\end{enumerate}")
+        template_appendix = template_appendix.replace("\\end{document}", "").strip()
+        merged_appendices = []
+        if template_appendix and os.path.abspath(template) not in [
+            os.path.abspath(f) for f in args.input
+        ]:
+            merged_appendices.append(template_appendix)
+
+        referenced = referenced_labels(
+            [q[0] + "".join(q[1]) for q in all_questions], appendices
+        )
+        for appendix in appendices:
+            filtered, kept, total = filter_appendix(appendix, referenced)
+            if total:
+                print(f"Appendix blocks included: {kept}/{total}")
+            if filtered:
+                merged_appendices.append(filtered)
+
+        footer = (
+            closing
+            + "\\end{enumerate}\n\n"
+            + "\n\n".join(merged_appendices)
+            + "\n\n\\end{document}\n"
+        )
 
     # keep track of the original questions and their order
     backrefs = []

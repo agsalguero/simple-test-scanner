@@ -77,7 +77,7 @@ When several files are merged, each one is made independent of the others so its
 
 - Labels defined in a file (e.g. `\label{lst:1}` or `label={lst:1}` in a listing) are renamed with the file name as prefix (e.g. `parcial2-lst:1`), and so are the references to them (`\ref{lst:1}`), so files using the same labels do not collide.
 - Argument-less macros defined in the header of a file and used in its questions (e.g. `\newcommand{\Dado}{Dado el código de los listados \ref{lst:1}-\ref{lst:6}}`) are expanded in its questions, since only the header of the template is kept.
-- The content of each file after the `\end{enumerate}` that closes the questions list (e.g. code listings referenced by the questions) is appended at the end of the merged test, in the order of the files.
+- The content of each file after the `\end{enumerate}` that closes the questions list (e.g. code listings referenced by the questions) is appended at the end of the merged test, in the order of the files. Only the labeled blocks (`lstlisting`, `figure` or other environments, and `\lstinputlisting` commands that define a label) referenced by the selected questions are included. A range of references such as `\ref{lst:1}-\ref{lst:6}` (also with `--` or `a`) references every block between both labels. The text before the first block of a file (e.g. an introduction to the listings) is included only if some block of that file is included. Appendices without labeled blocks are always included, as is the appendix of the template.
 
 `--template` (optional): LaTeX file whose header and footer (the content before `% Questions start here` and after `% Questions end here`) are used for the generated tests. It also gives the name of the output files. Defaults to the first input file.
 
