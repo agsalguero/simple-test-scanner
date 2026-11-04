@@ -87,14 +87,16 @@ def read_braced(text, start):
     return text[start : i - 1], i
 
 
-def make_self_contained(file_path, prefix):
-    """Prepare a LaTeX file to be merged with others into a single test.
+def make_self_contained(file_path, prefix=None, expand_macros=True):
+    """Prepare a LaTeX file to be used with the header of another file (e.g. to
+    merge it with others into a single test).
 
-    - Labels defined in the file (e.g. ``lst:1``) are renamed to
-      ``<prefix>-<label>`` in its questions and footer, as well as the references
-      to them, so the labels of different files do not collide.
-    - Argument-less macros defined in the header of the file (e.g. ``\\Dado``)
-      are expanded in its questions, since only one header is kept.
+    - If a prefix is given, labels defined in the file (e.g. ``lst:1``) are
+      renamed to ``<prefix>-<label>`` in its questions and footer, as well as the
+      references to them, so the labels of different files do not collide.
+    - If expand_macros is set, argument-less macros defined in the header of the
+      file (e.g. ``\\Dado``) are expanded in its questions, since only the header
+      of the template is kept.
 
     Returns the transformed content and the appendix of the file: the footer
     content after the ``\\end{enumerate}`` that closes the questions list,
@@ -109,12 +111,12 @@ def make_self_contained(file_path, prefix):
     labels = {m.group(2) for m in LABEL_PATTERN.finditer(questions + footer)}
 
     def prefix_ref(match):
-        if match.group(2) in labels:
+        if prefix and match.group(2) in labels:
             return f"{match.group(1)}{prefix}-{match.group(2)}}}"
         return match.group(0)
 
     # expand argument-less macros of the header used in the questions
-    for match in MACRO_PATTERN.finditer(header):
+    for match in MACRO_PATTERN.finditer(header if expand_macros else ""):
         name = match.group(1)
         body, _ = read_braced(header, match.end())
         body = REF_PATTERN.sub(prefix_ref, body)
@@ -309,9 +311,10 @@ if __name__ == "__main__":
         "--questions",
         type=int,
         default=None,
-        help="Number of questions of the generated tests. If lower than the number "
-        "of available questions, a random subset is selected (the same for every "
-        "variation). Default: all the questions.",
+        help="Maximum number of questions of the generated tests. If lower than the "
+        "number of available questions, a random subset is selected (the same for "
+        "every variation); otherwise all the questions are used. Default: all the "
+        "questions.",
     )
     parser.add_argument(
         "--answers",
@@ -360,20 +363,26 @@ if __name__ == "__main__":
     appendices = []
     prefixes = set()
     for input_file in args.input:
-        content = None
+        prefix = None
         if merge:
             if args.show_questions:
                 print(f"--- {input_file}")
-            # make labels unique and questions independent of the file's header
+            # make labels unique across files
             prefix = re.sub(
                 r"[^A-Za-z0-9]", "", os.path.splitext(os.path.basename(input_file))[0]
             )
             while prefix in prefixes:
                 prefix += "x"
             prefixes.add(prefix)
-            content, appendix = make_self_contained(input_file, prefix)
-            if appendix:
-                appendices.append(appendix)
+        # make the questions independent of the file's header (unless it is the
+        # template) and extract its appendix (e.g. code listings)
+        content, appendix = make_self_contained(
+            input_file,
+            prefix,
+            expand_macros=os.path.abspath(input_file) != os.path.abspath(template),
+        )
+        if appendix:
+            appendices.append(appendix)
         questions_by_category = parse_questions(
             input_file, show_questions=args.show_questions, content=content
         )
@@ -396,11 +405,8 @@ if __name__ == "__main__":
     # select a random subset of questions (the same for every variation), keeping
     # their original order so backrefs refer to the order of the selected questions
     if args.questions is not None:
-        if not 1 <= args.questions <= len(all_questions):
-            print(
-                f"--questions must be between 1 and {len(all_questions)} "
-                f"(got {args.questions})."
-            )
+        if args.questions < 1:
+            print(f"--questions must be at least 1 (got {args.questions}).")
             exit(1)
         if args.questions < len(all_questions):
             selected = sorted(random.sample(range(len(all_questions)), args.questions))
@@ -411,29 +417,34 @@ if __name__ == "__main__":
                 for question, _, _ in all_questions:
                     print(f"  {question[:50]}")
 
-    # when merging several files, the footer is the end of the questions list of
-    # the template followed by the appendix of the template (if it is not an input
-    # file) and the blocks (e.g. code listings) of the appendices of the input
-    # files that are referenced by the selected questions
-    if merge:
-        closing, _, template_appendix = footer.partition("\\end{enumerate}")
-        template_appendix = template_appendix.replace("\\end{document}", "").strip()
-        merged_appendices = []
-        if template_appendix and os.path.abspath(template) not in [
-            os.path.abspath(f) for f in args.input
-        ]:
-            merged_appendices.append(template_appendix)
+    # the footer is the end of the questions list of the template followed by the
+    # appendix of the template (if it is not an input file) and the blocks (e.g.
+    # code listings) of the appendices of the input files that are referenced by
+    # the selected questions
+    template_is_input = os.path.abspath(template) in [
+        os.path.abspath(f) for f in args.input
+    ]
+    closing, _, template_appendix = footer.partition("\\end{enumerate}")
+    template_appendix = template_appendix.replace("\\end{document}", "").strip()
+    merged_appendices = []
+    if template_appendix and not template_is_input:
+        merged_appendices.append(template_appendix)
 
-        referenced = referenced_labels(
-            [q[0] + "".join(q[1]) for q in all_questions], appendices
-        )
-        for appendix in appendices:
-            filtered, kept, total = filter_appendix(appendix, referenced)
-            if total:
-                print(f"Appendix blocks included: {kept}/{total}")
-            if filtered:
-                merged_appendices.append(filtered)
+    referenced = referenced_labels(
+        [q[0] + "".join(q[1]) for q in all_questions], appendices
+    )
+    filtered_out = False
+    for appendix in appendices:
+        filtered, kept, total = filter_appendix(appendix, referenced)
+        if total:
+            print(f"Appendix blocks included: {kept}/{total}")
+        filtered_out = filtered_out or kept < total
+        if filtered:
+            merged_appendices.append(filtered)
 
+    # a single file used as its own template keeps its footer untouched when no
+    # block has been left out
+    if merge or not template_is_input or filtered_out:
         footer = (
             closing
             + "\\end{enumerate}\n\n"

@@ -73,11 +73,11 @@ LaTeX commands might be used in the questions. For example, the following questi
 
 `--input`: Path to the input LaTeX file containing the test. Several files can be given (separated by spaces) to merge their questions into a single test, e.g. to build a global exam from several partial exams. Questions are numbered in the order of the files (all questions of the first file, then those of the second, and so on), and `backrefs.csv` refers to that order.
 
-When several files are merged, each one is made independent of the others so its questions keep working in the merged test:
+Each input file is made independent of the others so its questions keep working in the generated test:
 
-- Labels defined in a file (e.g. `\label{lst:1}` or `label={lst:1}` in a listing) are renamed with the file name as prefix (e.g. `parcial2-lst:1`), and so are the references to them (`\ref{lst:1}`), so files using the same labels do not collide.
-- Argument-less macros defined in the header of a file and used in its questions (e.g. `\newcommand{\Dado}{Dado el código de los listados \ref{lst:1}-\ref{lst:6}}`) are expanded in its questions, since only the header of the template is kept.
-- The content of each file after the `\end{enumerate}` that closes the questions list (e.g. code listings referenced by the questions) is appended at the end of the merged test, in the order of the files. Only the labeled blocks (`lstlisting`, `figure` or other environments, and `\lstinputlisting` commands that define a label) referenced by the selected questions are included. A range of references such as `\ref{lst:1}-\ref{lst:6}` (also with `--` or `a`) references every block between both labels. The text before the first block of a file (e.g. an introduction to the listings) is included only if some block of that file is included. Appendices without labeled blocks are always included, as is the appendix of the template.
+- When several files are merged, labels defined in a file (e.g. `\label{lst:1}` or `label={lst:1}` in a listing) are renamed with the file name as prefix (e.g. `parcial2-lst:1`), and so are the references to them (`\ref{lst:1}`), so files using the same labels do not collide.
+- Argument-less macros defined in the header of a file and used in its questions (e.g. `\newcommand{\Dado}{Dado el código de los listados \ref{lst:1}-\ref{lst:6}}`) are expanded in its questions when the file is not the template, since only the header of the template is kept.
+- The content of each file after the `\end{enumerate}` that closes the questions list (e.g. code listings referenced by the questions) is appended at the end of the test, in the order of the files. Even with a single input file, only the labeled blocks (`lstlisting`, `figure` or other environments, and `\lstinputlisting` commands that define a label) referenced by the selected questions are included. A range of references such as `\ref{lst:1}-\ref{lst:6}` (also with `--` or `a`) references every block between both labels. The text before the first block of a file (e.g. an introduction to the listings) is included only if some block of that file is included. Appendices without labeled blocks are always included, as is the appendix of the template.
 
 `--template` (optional): LaTeX file whose header and footer (the content before `% Questions start here` and after `% Questions end here`) are used for the generated tests. It also gives the name of the output files. Defaults to the first input file.
 
@@ -85,7 +85,7 @@ When several files are merged, each one is made independent of the others so its
 
 `--variations` (optional): Number of test variations to generate (default: `1`).
 
-`--questions` (optional): Number of questions of the generated tests. If it is lower than the number of available questions, a random subset of questions is selected once and used in every variation, so all students answer the same questions. Selected questions keep their original relative order, and `backrefs.csv` refers to that order (i.e. answer 1 of the scanner output is the first selected question). Default: all the questions.
+`--questions` (optional): Maximum number of questions of the generated tests. If it is lower than the number of available questions, a random subset of questions is selected once and used in every variation, so all students answer the same questions; otherwise all the questions are used. Selected questions keep their original relative order, and `backrefs.csv` refers to that order (i.e. answer 1 of the scanner output is the first selected question). Default: all the questions.
 
 `--answers` (optional): Flag to also generate LaTeX files with correct answers for each variation.
 
